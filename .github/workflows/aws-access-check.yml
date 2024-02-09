@@ -14,14 +14,14 @@ jobs:
     if: github.event.review.state == 'APPROVED'
     runs-on: ubuntu-latest
     steps:
-      - name: integration
+      - name: pull-request-approve-check
         run: |
-          echo "Integration"
+          echo "pull-request-approve-check"
   dev-amplify-deploy-check:
     runs-on: ubuntu-latest
     if: contains(github.ref_name, 'feature') || contains(github.ref_name, 'backend')
     environment: development # Environment の名前を指定
-    needs: integration
+    needs: pull-request-approve-check
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
       id-token: write
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref_name == 'staging'
     environment: staging # Environment の名前を指定
-    needs: integration
+    needs: pull-request-approve-check
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
       id-token: write
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref_name == 'main'
     environment: production # Environment の名前を指定
-    needs: integration
+    needs: pull-request-approve-check
     # These permissions are needed to interact with GitHub's OIDC Token endpoint.
     permissions:
       id-token: write
