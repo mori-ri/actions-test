@@ -1,6 +1,4 @@
 name: Check Amplify Deploy status
-env:
-  amplifyId: d3rwbaom8040bu
 
 on:
   pull_request_review:
