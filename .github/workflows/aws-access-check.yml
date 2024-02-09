@@ -29,10 +29,10 @@ jobs:
           # branch=${{github.event.pull_request.head.ref}}
           branch="main"
           status=$(aws amplify list-jobs --app-id ${{secrets.AMPLIFY_APP_ID}} --branch-name $branch --query jobSummaries[0].status)
-          if [ $? -ne 0 ]; then
-            echo "Failed to list jobs $branch"
-            exit 1
-          fi
           echo "status=$status"
           echo "status=$status" >> $GITHUB_ENV
+          if [ "$status" == "FAILED" ]; then
+            echo "Amplify job failed"
+            exit 1
+          fi
         shell: bash
