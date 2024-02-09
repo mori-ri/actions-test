@@ -31,7 +31,7 @@ jobs:
           status=$(aws amplify list-jobs --app-id ${{secrets.AMPLIFY_APP_ID}} --branch-name $branch --query jobSummaries[0].status)
           echo "status=$status"
           echo "status=$status" >> $GITHUB_ENV
-          if [ "$status" = "FAILED" ]; then
+          if [ $status = "FAILED" ]; then
             echo "Amplify job failed"
             exit 1
           fi
