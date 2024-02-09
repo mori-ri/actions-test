@@ -10,12 +10,14 @@ env:
 
 jobs:
   pull-request-approve-check:
-    if: github.event.review.state == 'APPROVED'
     runs-on: ubuntu-latest
     steps:
       - name: pull-request-approve-check
         run: |
           echo "pull-request-approve-check"
+          if: github.event.review.state != 'APPROVED'
+            exit 1
+          fi
   dev-amplify-deploy-check:
     runs-on: ubuntu-latest
     if: contains(github.ref_name, 'feature') || contains(github.ref_name, 'backend')
