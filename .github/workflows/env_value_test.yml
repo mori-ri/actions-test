@@ -1,0 +1,68 @@
+name: Check Amplify Deploy status
+env:
+  amplifyId: d3rwbaom8040bu
+
+on:
+  pull_request_review:
+    types: [submitted]
+  workflow_dispatch:
+
+jobs:
+  run-amplify-deploy-check:
+    if: github.event.review.state == 'APPROVED'
+    runs-on: ubuntu-latest
+    steps:
+      - name: integration
+        run: |
+          echo "Integration"
+  dev_deployment:
+    runs-on: ubuntu-latest
+    if: contains(github.ref_name, 'feature') || contains(github.ref_name, 'backend')
+    environment: development # Environment の名前を指定
+    needs: integration
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Run AWS Amplify List Jobs
+        id: amplify
+        run: |
+          echo "Development Deployment"
+          branch=${{github.event.pull_request.head.ref}}
+          status=$(aws amplify list-jobs --app-id ${{env.amplifyId}} --branch-name $branch --query jobSummaries[0].status)
+          echo "status=$status" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Check status and exit if failed
+        run: |
+          if [[ "${{ steps.amplify.outputs.status }}" == "FAILED" ]]; then
+            echo "Job failed. Exiting..."
+            exit 1
+          fi
+
+  stg_deployment:
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'staging'
+    environment: staging # Environment の名前を指定
+    needs: integration
+    steps:
+      - name: deploy
+        run: |
+          echo "Staging Deployment"
+          echo ${{ vars.HOGE_ENV }}
+          echo ${{ secrets.HOGE_SECRET }}
+  prod_deployment:
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main'
+    environment: production # Environment の名前を指定
+    needs: integration
+    steps:
+      - name: deploy
+        run: |
+          echo "Production Deployment"
+          echo ${{ vars.HOGE_ENV }}
+          echo ${{ secrets.HOGE_SECRET }}
