@@ -1,7 +1,6 @@
 name: Check Amplify Deploy status
 
 on:
-  push:
   pull_request_review:
     types: [submitted]
   workflow_dispatch:
@@ -11,12 +10,14 @@ env:
 
 jobs:
   pull-request-approve-check:
-    # if: github.event.review.state == 'APPROVED'
     runs-on: ubuntu-latest
     steps:
       - name: pull-request-approve-check
         run: |
           echo "pull-request-approve-check"
+          if: github.event.review.state != 'APPROVED'
+            exit 1
+          fi
   dev-amplify-deploy-check:
     runs-on: ubuntu-latest
     if: contains(github.ref_name, 'feature') || contains(github.ref_name, 'backend')
@@ -37,14 +38,13 @@ jobs:
         id: amplify
         run: |
           echo "Development Env"
-          # branch=${{github.event.pull_request.head.ref}}
-          branch="main"
+          branch=${{github.event.pull_request.head.ref}}
           status=$(aws amplify list-jobs --app-id ${{secrets.AMPLIFY_APP_ID}} --branch-name ${branch} --query jobSummaries[0].status | tr -d '"')
-          echo "status=${status}"
-          # echo "status=$status" >> $GITHUB_ENV
           if [ ${status} = "FAILED" ]; then
             echo "Amplify deploy failed -branch:${branch}"
             exit 1
+          else
+            echo "status=${status}"
           fi
         shell: bash
 
@@ -68,14 +68,13 @@ jobs:
         id: amplify
         run: |
           echo "Staging Env"
-          # branch=${{github.event.pull_request.head.ref}}
-          branch="main"
+          branch=${{github.event.pull_request.head.ref}}
           status=$(aws amplify list-jobs --app-id ${{secrets.AMPLIFY_APP_ID}} --branch-name ${branch} --query jobSummaries[0].status | tr -d '"')
-          echo "status=${status}"
-          # echo "status=$status" >> $GITHUB_ENV
           if [ ${status} = "FAILED" ]; then
             echo "Amplify deploy failed -branch:${branch}"
             exit 1
+          else
+            echo "status=${status}"
           fi
         shell: bash
   prod-amplify-deploy-check:
@@ -98,13 +97,12 @@ jobs:
         id: amplify
         run: |
           echo "Production Env"
-          # branch=${{github.event.pull_request.head.ref}}
-          branch="main"
+          branch=${{github.event.pull_request.head.ref}}
           status=$(aws amplify list-jobs --app-id ${{secrets.AMPLIFY_APP_ID}} --branch-name ${branch} --query jobSummaries[0].status | tr -d '"')
-          echo "status=${status}"
-          # echo "status=$status" >> $GITHUB_ENV
           if [ ${status} = "FAILED" ]; then
             echo "Amplify deploy failed -branch:${branch}"
             exit 1
+          else
+            echo "status=${status}"
           fi
         shell: bash
